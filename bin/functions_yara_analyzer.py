@@ -20,9 +20,10 @@ from functions_lib  import *
 def run_yara_rules(file_path, yara_rules_dir):
     matched_tbl = {}
     rule_dict = build_file_path_tbl(yara_rules_dir)
-    print rule_dict
     rules = yara.compile(filepaths=rule_dict)
     matches = rules.match(file_path)
+    if len(matches) == 0:
+       return matched_tbl
     matched_tbl[file_path] = matches
     return matched_tbl
 

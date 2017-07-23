@@ -17,6 +17,8 @@ import zipfile
 import shutil
 import re
 import magic
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
 
 def format_date_pack():
     lastHourDateTime = datetime.today() - timedelta(minutes = 1)
@@ -69,17 +71,17 @@ def get_today():
     date = ("%s-%02d-%02d" % (i.year, i.month, i.day))
     return date
 
-def get_embedded_objects_run_foremost(attachment_files, mime_attachment_directory):
+def get_embedded_objects_run_foremost(filepath, mime_attachment_directory):
     today = get_today()
     extracted_files_lst = []
     random = get_random()
-    for filepath in attachment_files:
+    output_dir = None
+    try:
         dir_name =  os.path.dirname(filepath)
         filename = os.path.basename(filepath).strip(".")
         output_dir = mime_attachment_directory+"/"+random+"_"+today
         md5 = get_md5sum(filepath)
         command("foremost -i "+filepath+" -o "+output_dir +"  &> /dev/null")
-        #command("foremost -i "+filepath+" -o "+output_dir)
         file_lst =  walktree(output_dir)
         for extracted_file in file_lst:
                 md5_extracted = get_md5sum(extracted_file)
@@ -91,6 +93,8 @@ def get_embedded_objects_run_foremost(attachment_files, mime_attachment_director
                 #extracted_file_path = output_dir+"/"+extracted_file
                 if extracted_file not in extracted_files_lst:
                    extracted_files_lst.append(extracted_file)
+    except:
+       return extracted_files_lst
     return extracted_files_lst         
 
 
@@ -101,22 +105,14 @@ def get_random():
     return (''.join(choice(ascii_uppercase) for i in range(12)))
 
 
-def walktree(top, file_lst=[]):
-    for f in os.listdir(top):
-        pathname = os.path.join(top, f)
-        mode = os.stat(pathname)[ST_MODE]
-        if S_ISDIR(mode):
-            # It's a directory, recurse into it
-            walktree(pathname, file_lst)
-        elif S_ISREG(mode):
-            # It's a file, append it to file_lst
-            if pathname in file_lst:
-               continue
-            file_lst.append(pathname)
-        else:
-            # Unknown file type, print a message
-            print 'Skipping %s' % pathname
+def walktree(file_dir):
+    file_lst = []
+    for root, dirs, files in os.walk(file_dir):
+        for file_name in files:
+           file_path = root+"/"+file_name 
+           file_lst.append(file_path)
     return file_lst
+
 
 def extract_zip(my_dir, my_zip): 
    file_lst = []
@@ -216,6 +212,3 @@ def get_short_domain1(url):
 
 if __name__ == "__main__":
    print "Hello World!"
-   domain = "http://www.google.com/aa/bb"
-   domain = get_short_domain1(domain)
-   print domain

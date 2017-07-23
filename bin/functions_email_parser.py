@@ -1,13 +1,25 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 
-__description__ = "Analyze mime encoded files to extract malicious data"
+__description__ = "Modules to parse email files to extract data"
 __author__="Gita Ziabari"
-__version__="0.0.1"
-__date__="04/24/2017"
+__version__="0.0.2"
+__date__="07/22/2017"
 
 """
-Source code put in Fidelis GitHub by Gita Ziabari, no Copyright
-Use at your own risk
+    This file is part of Yalda.
+
+    Yalda is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    any later version.
+
+    Yalda is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Yalda.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import magic
@@ -26,22 +38,23 @@ from config_file import *
 sys.path.append(bin_dir)
 from functions_lib  import *
 from functions_database import * 
+from functions_decoder import * 
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
 
 import random
 import time
 
-def get_mime_message(data, extracted_file):
+def get_mime_message(data, extracted_file, mime_attachment_directory):
     if not os.path.exists(mime_attachment_directory):
        os.mkdir(mime_attachment_directory)
-
+    basename = os.path.basename(extracted_file).strip(" ")
     dir_lst = []
-    dir_attachments = []
+    file_name_tbl = []
     msg_file = "/tmp/mime_msg"
     count = 0
-    seen_dir = []
-    for key in data:
-            print key +"---"+str(data.get(key))
-            time.sleep(3)
+    try:
+       for key in data:
             #get mime message
             if key == "fullMessage":
                command("rm -f "+msg_file)
@@ -51,8 +64,7 @@ def get_mime_message(data, extracted_file):
                txt.close()
                with open(msg_file) as fp:
                   msg = email.message_from_file(fp)
-                  #new_dir = attachment_directory+extracted_file+str(count)
-                  new_dir = mime_attachment_directory+extracted_file+"_"+str(count)
+                  new_dir = mime_attachment_directory
                   count+=1
                   if not os.path.exists(new_dir):
                      os.mkdir(new_dir)
@@ -66,88 +78,75 @@ def get_mime_message(data, extracted_file):
                         if not ext:
                            ext = '.bin'
                         filename = 'part-%03d%s' % (counter, ext)
+                     filename = filename.strip(" ")
+                     filename = basename+"_"+str(count)+"_"+filename
                      counter+=1
                      with open(os.path.join(new_dir, filename), 'wb') as fp:
                                fp.write(part.get_payload(decode=True))
-                     
-                     #mime_attachments.setdefault(filename, new_dir)
-                     file_list = os.listdir(new_dir)
-                     for file_name in file_list:
-                          file_path = new_dir+"/"+file_name
-                          
-                          if file_path in dir_attachments:
-                             continue
-                          if file_path.split(".")[-1]=="zip":
-                             zip_file_name = file_path.strip(".zip")
-                             zip_dir = zip_file_name+"_zip"
-                             if os.path.exists(zip_dir):
-                                      continue
-                             
-                             os.mkdir(zip_dir)
-                             command("unzip "+file_path+" -d "+zip_dir)
+                               file_path = new_dir+filename
+                               if filename in file_name_tbl:
+                                  continue
+                               else:
+                                  dir_lst.append(new_dir+filename)
+       os.remove(msg_file)
+    except:
+        return dir_lst
+    return dir_lst
 
 
-def analyze_mime_downloaded_files(file_lst):
-    attribute_tbl = {}
-    domain_tbl = []
-    suspicious_md5 = []
-    count = 0
-    for downloaded_file in file_lst:
-            
-            file_type_magic = magic.from_file(downloaded_file)
-            file_type = downloaded_file.split(".")[-1]
-            md5_hash = get_md5sum(downloaded_file)
-            size = get_size(downloaded_file)
-            base_dir = os.path.dirname(downloaded_file)
-            if file_type == "zip":
-               new_name = downloaded_file.strip(".zip")
-               zip_dir =new_name+str(count)
-               if os.path.exists(zip_dir):
-                  continue
-               try:
-                 os.mkdir(zip_dir)
-                 extracted_files = extract_zip(downloaded_file, zip_dir)
-                 count+=1
-                 for zip_file in extracted_files:
-                   zip_file =  zip_dir+"/"+zip_file
-                   md5sum = get_md5sum(zip_file)
-                   extracted_file_type = magic.from_file(zip_file)
-                   domain_lst = get_domain_lst(zip_file, extracted_file_type)
-                   insert_data_in_database(domain_lst, zip_file, md5sum, file_type, size) 
-               except:
-                  continue
-            else:
-               domain_lst = get_domain_lst(downloaded_file, file_type_magic)
-               insert_data_in_database(domain_lst, downloaded_file, md5_hash, file_type_magic, size) 
+def get_mime_attr(data, extracted_file, mime_attachment_directory):
+    mime_attr = {}
+    try:
+       if not os.path.exists(mime_attachment_directory):
+          os.mkdir(mime_attachment_directory)
+       basename = os.path.basename(extracted_file).strip(" ")
+    
+       for key in data:
+           mime_attr[key] = value
+    except:
+        return mime_attr
+
+    return mime_attr
 
 
-def get_domain_lst(downloaded_file, file_type):
-    print downloaded_file
+def get_domain_lst(downloaded_file, file_type, domains_seen):
     domain_lst = []
-    if re.search("ASCII text", file_type):
-       file_format = downloaded_file.split(".")[-1]
-       if file_format == "wsf":
-           domain_lst = parse_wsf_file(downloaded_file)
-       
-    elif re.search("Rich Text Format data", file_type):
-       blob = open(downloaded_file, 'r').read()
-       string = ''.join(blob.splitlines())
-       pattern = re.compile('68007400740070[\w\d]{,400}64006f0063')
-       result = pattern.search(string)
-       if result:
-          link = ''.join(binascii.unhexlify(str(result.group(0))).split('\x00'))
-          domain = (get_short_url(link)).rstrip("/")
-          domain_lst.append(domain)      
-          print domain
-    elif re.search("PDF document", file_type):
-       blob = open(downloaded_file, 'r').read()
-       string = ''.join(blob.splitlines())
-       match = re.search("/Type /Action/S /URI/URI \((http:\/\/[a-zA-Z_][a-zA-Z_0-9-./]*)\)\>\>endobj", string)
-       if match:
-          link =  match.group(1)
-          domain = (get_short_url(link)).rstrip("/")
-          domain_lst.append(domain)
+    try:
+       if re.search("ASCII text", file_type):
+          file_format = downloaded_file.split(".")[-1]
+          if file_format == "wsf":
+              domain_lst = parse_wsf_file(downloaded_file, domains_seen)
+       elif re.search("Rich Text Format data", file_type):
+          blob = open(downloaded_file, 'r').read()
+          string = ''.join(blob.splitlines())
+          pattern = re.compile('68007400740070[\w\d]{,400}64006f0063')
+          result = pattern.search(string)
+          if result:
+             link = ''.join(binascii.unhexlify(str(result.group(0))).split('\x00'))
+             domain = (get_short_url(link)).rstrip("/")
+             if domain in domains_seen:
+                return []
+             domain_lst.append(domain)      
+       elif re.search("PDF document", file_type):
+          blob = open(downloaded_file, 'r').read()
+          string = ''.join(blob.splitlines())
+          match = re.search("/Type /Action/S /URI/URI \((http:\/\/[a-zA-Z_][a-zA-Z_0-9-./]*)\)\>\>endobj", string)
+          if match:
+             link =  match.group(1)
+             domain = (get_short_url(link)).rstrip("/")
+             if domain in domains_seen:
+                return []
+             domain_lst.append(domain)
+          files_lst = get_embedded_objects_run_foremost([downloaded_file], mime_attachment_directory)
+          for file_name in files_lst:
+              file_base = os.path.basename(file_name)
+              if file_base == "audit.txt":
+                 continue
+              aa = get_domain_lst(file_name, file_type, domains_seen)
+    except:
+       return domain_lst
     return domain_lst       
+
 
 def get_short_url(url):
     """Return top two domain levels from URI"""
@@ -188,37 +187,40 @@ def get_short_url(url):
     return result
 
 
-def parse_wsf_file(zip_file):
+def parse_wsf_file1(zip_file):
     domain_lst=[]
+    severity = 2
     txt = open(zip_file, "r")
     lines = txt.readlines()
     txt.close()
-
-    for line in lines:
-        if not re.search("Array", line):
-           continue
-        try:
+    try:
+      for line in lines:
+           if not re.search("Array", line):
+              continue
            list_array = line.split("Array(")
+        
            array_data = ((list_array[1].split(";")[0]).strip(")")).split(",")
+           severity = 4
            for i in array_data:
                domain =  i.strip('"')
                domain_lst.append(domain)
-        except:
-           continue
-    return domain_lst
+      return domain_lst, severity 
+    except:
+       return domain_lst, severity
 
 
 def get_attachments_mail_text(filename, mime_attachment_directory):
     attachment_lst = []
     file_lst = []
-    mb = mailbox.mbox(filename)
-    nmes = len(mb)
-    directory = os.path.dirname(filename)
-    os.chdir(directory)
-    for i in range(len(mb)):
+    try:
+     mb = mailbox.mbox(filename)
+     nmes = len(mb)
+     directory = os.path.dirname(filename)
+     os.chdir(directory)
+     for i in range(len(mb)):
         mes = mb.get_message(i)
 	em = email.message_from_string(mes.as_string())
-        print em
+        #for key in em:
 
 	subject = em.get('Subject')
 	if subject.find('=?') != -1:
@@ -243,6 +245,8 @@ def get_attachments_mail_text(filename, mime_attachment_directory):
 	else:
             file_lst = extract_attachment(em, mime_attachment_directory)
             attachment_lst+=file_lst
+    except:
+      return attachment_lst
     return attachment_lst    
 
 
@@ -252,8 +256,8 @@ def extract_attachment(payload, mime_attachment_directory):
         BLACKLIST = ('signature.asc', 'message-footer.txt', 'smime.p7s')
 	filename = payload.get_filename()
         attachment_lst = []
-
-	if filename is not None:
+        try:
+	  if filename is not None:
 		if filename.find('=?') != -1:
 			ll = email.header.decode_header(filename)
 			filename = ""
@@ -291,11 +295,12 @@ def extract_attachment(payload, mime_attachment_directory):
 			fp.close()	
 
 		attachments = attachments + 1
-	else:
+	  else:
 		if payload.is_multipart():
 			for payl in payload.get_payload():
                              extract_attachment(payl, mime_attachment_directory)
+        except:
+           return attachment_lst
         return attachment_lst
 if __name__ == "__main__":
    print "Hi there!"
-  

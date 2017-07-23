@@ -185,7 +185,7 @@ def get_short_domain1(url):
         (?:\#(?P<fragment>      [^\s]*)  )?  # capture optional fragment
         $                                    # anchor to end of string
         """, re.MULTILINE | re.VERBOSE)
-    result = ""
+    result = url
     m_uri = re_3986_enhanced.match(url)
     if m_uri and m_uri.group("authority"):
         auth = m_uri.group("authority")
@@ -208,7 +208,9 @@ def get_short_domain1(url):
 
         scheme = m_uri.group("scheme")
         result = auth+"/"+url_path
-    return result
+    return result.rstrip("/")
 
 if __name__ == "__main__":
    print "Hello World!"
+   aa = get_short_domain1("hyoeyeep.ws")
+   print aa

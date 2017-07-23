@@ -79,10 +79,13 @@ def parse_rtf_file(file_path):
     if result:
        severity = 5
        link = ''.join(binascii.unhexlify(str(result.group(0))).split('\x00'))
-       domain = (get_short_url(link)).rstrip("/")
-       if domain in domains_seen:
-          return []
-       domain_lst.append(domain)
+       #domain = (get_short_url(link)).rstrip("/")
+       #if domain in domains_seen:
+       #   return []
+       #domain_lst.append(domain)
+       print link
+       domain_lst.append(link)
+
     return domain_lst, severity
 
 
@@ -95,8 +98,8 @@ def parser_pdf_zero_day(file_path):
     if match:
           severity = 5
           link =  match.group(1)
-          domain = (get_short_url(link)).rstrip("/")
-          domain_lst.append(domain)
+          #domain = (get_short_url(link)).rstrip("/")
+          domain_lst.append(link)
     return domain_lst, severity
 
 def parser_pdf_embedded_java_script(file_path):
@@ -133,3 +136,6 @@ def xor_file(file_data, key):
     
 if __name__ == "__main__":
    print "hello world"
+   data = "/work/samples/pcap/VT_FILES_HTML23-7-2017/78e4a544c5c70ee93a65b93b0fd67d84"
+   aa = parse_rtf_file(data)
+   print aa

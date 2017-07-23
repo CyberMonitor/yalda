@@ -104,7 +104,7 @@ def insert_strings_collection(strings_tbl):
     inserted_id = db.yalda_collection_sha1_strings.insert_one(strings_tbl)
 
 
-def get_strings_collection1():
+def get_strings_collection():
     data_tbl = []
     strings_dict = {}
     md5_lst = []
@@ -125,7 +125,7 @@ def get_strings_collection1():
     return strings_dict
 
 
-def get_strings_collection():
+def get_strings_collection1():
     data_tbl = []
     strings_dict = {}
     md5_lst = []

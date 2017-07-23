@@ -182,18 +182,26 @@ def extract_mime_attachments(file_path, file_type):
           return attachment_lst
     return attachment_lst
 
+
+def get_domain_lst(url_lst):
+    '''Get the list of URLs and return list of associated domains'''
+    domain_lst = []
+    for url in url_lst:
+        domain = get_short_domain1(url)
+        domain_lst.append(domain)
+    return domain_lst
+
      
 def decode_file(file_path):
-    """Analyze file and extract malicious/suspicious domains out of it"""
-    file_info = {}
-    try:
+     """Analyze file and extract malicious/suspicious domains out of it"""
+     file_info = {}
      if os.path.exists(file_path):
     
       flag = "unknown"
       file_type_magic = magic.from_file(file_path)
       file_split = file_path.split(".")
       if len(file_split)<=1:
-         file_type = file_type_magic.split(" ")[0].upper()
+         file_type = (file_type_magic.split(","))[0].upper()
          if re.search("PE32", file_type):
             file_type = "EXE"
       else:
@@ -205,9 +213,12 @@ def decode_file(file_path):
       sha1_hash = get_sha1(file_path)
       size = get_size(file_path)
       file_name = os.path.basename(file_path)
-      domain_lst= extract_domain_lst(file_path, file_type_magic)
+      url_lst= extract_domain_lst(file_path, file_type_magic)
+      domain_lst = get_domain_lst(url_lst)
       if domain_lst == []:
          domain_lst = None
+      if url_lst == []:
+         url_lst = None
       pe_sections = get_pe_sections(file_path)
       file_info = {"File_Path": file_path,
                  'MD5': md5_hash,
@@ -218,13 +229,12 @@ def decode_file(file_path):
                  'File_Type': file_type,
                  'Magic_literal': file_type_magic,
                  'Domain_lst': domain_lst,
-                 'File_Type_Extension': file_type.lower(),
+                 'URL_lst' : url_lst,
+                 #'File_Type_Extension': file_type.lower(),
                  'File_Name' : file_name,
                  'PE_sections' : pe_sections
                 }
-    except:
-       return file_info
-    return file_info 
+      return file_info 
 
 
 def get_flag_severity1(file_type, severity, file_path, flag):
@@ -267,8 +277,7 @@ def score_file_strings_base(file_path, strings_dict):
     file_strings = apply_strings(file_path) 
     if file_strings == []:
        return score, md5_tbl
-    try:
-     for md5 in strings_dict:
+    for md5 in strings_dict:
         total_per_md5 = 0    #number of time stringS seen in each md5
         string_lst = strings_dict.get(md5)
         seen_strings= []
@@ -284,8 +293,6 @@ def score_file_strings_base(file_path, strings_dict):
                 total_per_md5+=count   #total number of common strings for this hash
         if total_per_md5 >=10:
            md5_tbl.setdefault(total_per_md5, md5)
-    except:
-       return score, md5_tbl
     return score, md5_tbl
 
 
@@ -304,30 +311,6 @@ def extract_domain_lst(file_path, file_type):
     except:
      return domain_lst
     return domain_lst
-    
-
-def parse_wsf_file1(zip_file):
-    domain_lst=[]
-    severity = 2
-    if os.path.exists(zip_file):
-     
-      txt = open(zip_file, "r")
-      lines = txt.readlines()
-      txt.close()
-      try:
-        for line in lines:
-           if not re.search("Array", line):
-              continue
-           list_array = line.split("Array(")
-
-           array_data = ((list_array[1].split(";")[0]).strip(")")).split(",")
-           severity = 4
-           for i in array_data:
-               domain =  i.strip('"')
-               domain_lst.append(domain)
-      except:
-         return domain_lst, severity
-    return domain_lst, severity
 
 
 def bool_json_check(file_path):

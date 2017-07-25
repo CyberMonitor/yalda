@@ -120,20 +120,20 @@ Yalda comes in three folders: bin, src and yara_dir. bin contains the main modul
 
 To configure Yalda, the end user would need to navigate to src folder and configure config file with following information:
 
-•	bin_dir = <Specify full path of bin directory>
+•	bin_dir = Specify full path of bin directory
 
-•	data_dir = <Specify full path of the directory that you would place files/subdirectories>
+•	data_dir = Specify full path of the directory that you would place files/subdirectories
 
-•	clean_up_mime_directory = <set it to 1 if you would like to remove extracted files in the mime_attachment_directory 
+•	clean_up_mime_directory = set it to 1 if you would like to remove extracted files in the mime_attachment_directory 
 directory or 0 if you would like to keep the files.
 
-•	mime_attachment_directory = <specify full path of the directory that extracted/downloaded files would be placed>
+•	mime_attachment_directory = specify full path of the directory that extracted/downloaded files would be placed
 
 •	mongodb config:
 
-o	local = <IP address of mongodb>
+o	local = IP address of mongodb
 
-o	port = <Port number to connect to mongodb>
+o	port = Port number to connect to mongodb
 
 o	db_name = by default the database name is defined amfm_db
 
@@ -141,11 +141,11 @@ o	collection_name = by default the main collection name is defined yalda_collect
 
 •	yara_check = <1 = enabled, 0= disabled> enable it if you would like to run yara rules on the samples. Please note that the format of yara rules should be compatible with yara command.
 
-•	yara_rules_dir = <Indicate full path of the yara rule directory>
+•	yara_rules_dir = Indicate full path of the yara rule directory
 
 •	vt_check = <1= enabled, 0 = disabled> enable it if you would like the sample be checked in Virus total and include a section of virus total such as number of AV engines detecting the sample, paramalink and if the file exists in virus total.
 
-•	vt_key = <place your VT key in this section>
+•	vt_key = place your VT key in this section
 
 License
 

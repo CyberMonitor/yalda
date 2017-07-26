@@ -54,6 +54,7 @@ for root, dirs, files in os.walk(data_dir):
            extracted_file_lst = []
            extracted_file_lst = parser.get_extracted_files(file_path, seen)
            for extracted_file in extracted_file_lst:
+               print "--- Analyzing "+extracted_file
                if extracted_file in seen:
                   continue
                seen.append(extracted_file)
@@ -92,14 +93,16 @@ for root, dirs, files in os.walk(data_dir):
                   file_info["VT_Info"] = vt_dict
 
                database.insert_file_detailed_info_in_database(file_info)
-               #print file_info  
+               if debug == 1:
+                  for key in file_info:
+                      print key+": "+str(file_info.get(key))
                if flag == "malicious" or severity>=1:
                   strings_collection = parser.build_up_strings_collection(file_path, database_strings_collection)
                   if strings_collection!=None:
                       #insert it in database only if it doesn't already exist 
                       database.insert_strings_collection(strings_collection)
-                  #similar_hashes = get_similar_hashes(file_path)
                for embed_file in embedded_files:
+                      print "--- Analyzing Embedded file "+embed_file
                       if embed_file in seen:
                          continue
                       seen.append(embed_file)
@@ -139,7 +142,9 @@ for root, dirs, files in os.walk(data_dir):
                          embed_file_info["VT_Info"] = vt_dict
  
                       database.insert_file_detailed_info_in_database(embed_file_info)
-                      #print embed_file_info
+                      if debug == 1:
+                         for key in embed_file_info:
+                             print key+": "+str(embed_file_info.get(key))
 
                       if flag == "malicious" or severity>=2:
                          embed_strings_collection = parser.build_up_strings_collection(embed_file, database_strings_collection)

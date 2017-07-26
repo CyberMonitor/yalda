@@ -47,10 +47,12 @@ mime_attachment_directory = "<directory for placing extracted files in it>"
 #clean up mail directory prior executing the script
 clean_up_mime_directory = 1   #anabled = 1, disabled = 0 
 
+#Debug mode, set it 1 to print out extracted information of each file. Note: This would slow down the analysis
+debug = 1
 
 #specify mongodb credentials here
 localhost = "IP address of mongodb"
-port = 22     #port number for connecting to mongodb
+port = 27017     #port number for connecting to mongodb
 db_name = 'amfm_db'
 collection_name = 'yalda_collection'
 

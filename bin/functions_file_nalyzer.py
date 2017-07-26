@@ -428,20 +428,20 @@ def set_flag_sev(embedded_files, yara_match_tbl, file_info, strings_score, high_
              severity+=1 
              if file_type in suspicious_filetype_lst:
                 severity = 4 
-       if strings_score>=500 and strings_score<=1000:
+       if strings_score>=500000 and strings_score<=1000000:
           if flag == "unknown":
              flag = "suspicious"
           if severity <=2:
              severity+=1  
-       if strings_score>=1001:
+       if strings_score>=1000001:
           if flag == "unknown":
              flag = "suspicious"
           if severity <=3:
              severity+=1 
        if len(high_scored_md5_lst) >=9:
-          if flag == "unknown":
-             flag = "suspicious"
-          if severity <=2:
+          
+         
+          if severity <=1:
              severity+=1
        is_ole = is_embedded_ole(file_path)
        if is_ole:

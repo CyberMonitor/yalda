@@ -37,6 +37,7 @@ yara_analyzer = import_from("functions_yara_analyzer")
 vt_analyzer = import_from("functions_vt_analyzer")
 
 md5s_seen = database.get_strings_collection()
+md5s_seen = []
 
 #strings seen in malicious files
 database_strings_collection = database.get_strings_collection()
@@ -54,9 +55,9 @@ for root, dirs, files in os.walk(data_dir):
            extracted_file_lst = []
            extracted_file_lst = parser.get_extracted_files(file_path, seen)
            for extracted_file in extracted_file_lst:
-               print "--- Analyzing "+extracted_file
                if extracted_file in seen:
                   continue
+               print "--- Analyzing "+extracted_file
                seen.append(extracted_file)
                file_info = {}
                md5 = get_md5sum(file_path)
@@ -102,9 +103,9 @@ for root, dirs, files in os.walk(data_dir):
                       #insert it in database only if it doesn't already exist 
                       database.insert_strings_collection(strings_collection)
                for embed_file in embedded_files:
-                      print "--- Analyzing Embedded file "+embed_file
                       if embed_file in seen:
                          continue
+                      print "--- Analyzing Embedded file "+embed_file
                       seen.append(embed_file)
                       embed_file_info = {}
                       basename = os.path.basename(embed_file)

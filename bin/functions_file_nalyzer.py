@@ -229,8 +229,7 @@ def decode_file(file_path):
                  'File_Type': file_type,
                  'Magic_literal': file_type_magic,
                  'Domain_lst': domain_lst,
-                 'URL_lst' : url_lst,
-                 #'File_Type_Extension': file_type.lower(),
+                 #'URL_lst' : url_lst,
                  'File_Name' : file_name,
                  'PE_sections' : pe_sections
                 }

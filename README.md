@@ -89,7 +89,7 @@ Following is an example of obtained results from analyzing a file:
 
 Yalda Requirements
 
-Yalda runs on Linux environments and it has been tested with python 2.7. You would need mongodb to save the collected data in database. You would also need to customize config file, which is described in detail in “How to Use Yalda” section. The following python modules need to be installed prior running the script:
+Yalda runs on Linux environments (version: 2.6.32-642.4.2.el6.x86_64) and it has been tested with python 2.7. You would need mongodb to save the collected data in database. You would also need to customize config file, which is described in detail in “How to Use Yalda” section. The following python modules need to be installed prior running the script:
 
 
 Magic
